@@ -1,0 +1,37 @@
+{
+  "expo": {
+    "name": "Aniku",
+    "slug": "Aniku",
+    "version": "1.0.0",
+    "orientation": "default",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1a1a1a"
+    },
+    "android": {
+      "ndkVersion": "29.0.14206865",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1a1a1a"
+      },
+      "permissions": [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_EXTERNAL_STORAGE",
+        "WAKE_LOCK"
+      ],
+      "package": "com.jmovi.Aniku",
+      "versionCode": 1,
+      "screenOrientation": "default"
+    },
+    "plugins": [
+      "react-native-video",
+      "expo-screen-orientation"
+    ]
+  }
+}
