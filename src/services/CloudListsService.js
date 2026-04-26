@@ -10,8 +10,19 @@ import {
   deleteDoc,
   serverTimestamp,
 } from "firebase/firestore";
-import { db } from "../../firebaseConfig";
+import { getFirebaseDb } from "../../firebaseConfig";
 import AuthService from "./AuthService";
+
+// Helper to safely get db or throw error if not configured
+const getDb = () => {
+  try {
+    return getFirebaseDb();
+  } catch (error) {
+    // If Firebase not configured, return a safe no-op object
+    console.warn("⚠️ Firebase not configured. Cloud lists disabled.", error.message);
+    return null;
+  }
+};
 
 // Estructura Firestore:
 //   userLists/{userId}         → { userId, lists: [...], updatedAt }
@@ -31,12 +42,13 @@ class CloudListsService {
   static async uploadLists(lists) {
     const user = this.getUser();
     if (!user) return;
+    const database = getDb();
+    if (!database) { logger.warn("☁️ [Lists] Firebase not configured"); return; }
     try {
       await setDoc(
-        doc(db, this.LISTS_COLLECTION, user.uid),
+        doc(database, this.LISTS_COLLECTION, user.uid),
         { userId: user.uid, lists, updatedAt: serverTimestamp() },
         { merge: false },
-      );
     } catch (e) {
       logger.warn("☁️ [Lists] Error subiendo listas:", e.message);
     }
@@ -48,13 +60,14 @@ class CloudListsService {
   static async uploadListItems(listId, items) {
     const user = this.getUser();
     if (!user) return;
+    const database = getDb();
+    if (!database) { logger.warn("☁️ [Lists] Firebase not configured"); return; }
     try {
       const docId = `${user.uid}_${listId}`;
       await setDoc(
-        doc(db, this.ITEMS_COLLECTION, docId),
+        doc(database, this.ITEMS_COLLECTION, docId),
         { userId: user.uid, listId, items, updatedAt: serverTimestamp() },
         { merge: false },
-      );
     } catch (e) {
       logger.warn("☁️ [Lists] Error subiendo items:", e.message);
     }
@@ -66,9 +79,11 @@ class CloudListsService {
   static async deleteListItems(listId) {
     const user = this.getUser();
     if (!user) return;
+    const database = getDb();
+    if (!database) { logger.warn("☁️ [Lists] Firebase not configured"); return; }
     try {
       const docId = `${user.uid}_${listId}`;
-      await deleteDoc(doc(db, this.ITEMS_COLLECTION, docId));
+      await deleteDoc(doc(database, this.ITEMS_COLLECTION, docId));
     } catch (e) {
       logger.warn("☁️ [Lists] Error borrando items:", e.message);
     }
@@ -85,8 +100,10 @@ class CloudListsService {
     }
     try {
       logger.debug("☁️ [Lists] Descargando desde Firestore para:", user.uid);
+      const database = getDb();
+      if (!database) { logger.warn("☁️ [Lists] Firebase not configured"); return null; }
       // 1. Metadatos de listas
-      const listsSnap = await getDoc(doc(db, this.LISTS_COLLECTION, user.uid));
+      const listsSnap = await getDoc(doc(database, this.LISTS_COLLECTION, user.uid));
       if (!listsSnap.exists()) {
         logger.debug("☁️ [Lists] No hay documento de listas en Firestore");
         return { lists: [], itemsByList: {} };
@@ -99,7 +116,7 @@ class CloudListsService {
       const itemsByList = {};
       for (const list of lists) {
         const docId = `${user.uid}_${list.id}`;
-        const itemSnap = await getDoc(doc(db, this.ITEMS_COLLECTION, docId));
+        const itemSnap = await getDoc(doc(database, this.ITEMS_COLLECTION, docId));
         itemsByList[list.id] = itemSnap.exists()
           ? itemSnap.data().items || []
           : [];

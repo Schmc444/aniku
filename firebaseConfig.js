@@ -42,41 +42,59 @@ const missingFirebaseEnvVars = REQUIRED_FIREBASE_ENV_VARS.filter(
     !process.env[envName] || process.env[envName].trim().length === 0,
 );
 
-if (missingFirebaseEnvVars.length > 0) {
-  throw new Error(
-    `[firebaseConfig] Missing Firebase env vars: ${missingFirebaseEnvVars.join(
-      ", ",
-    )}.`,
+// Flag to track if Firebase is properly configured
+export const isFirebaseConfigured = missingFirebaseEnvVars.length === 0;
+
+// 🔥 Firebase configuration (customizable via .env)
+let firebaseConfig = null;
+let app = null;
+let auth = null;
+let db = null;
+
+if (isFirebaseConfigured) {
+  firebaseConfig = {
+    apiKey: readEnv("EXPO_PUBLIC_FIREBASE_API_KEY"),
+    authDomain: readEnv("EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN"),
+    projectId: readEnv("EXPO_PUBLIC_FIREBASE_PROJECT_ID"),
+    storageBucket: readEnv("EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET"),
+    messagingSenderId: readEnv("EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID"),
+    appId: readEnv("EXPO_PUBLIC_FIREBASE_APP_ID"),
+    measurementId: readEnv("EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID", false),
+  };
+
+  // 🚀 Initialize Firebase
+  app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+
+  function createAuth() {
+    try {
+      return initializeAuth(app, {
+        persistence: getReactNativePersistence(AsyncStorage),
+      });
+    } catch {
+      return getAuth(app);
+    }
+  }
+
+  // 🔐 Initialize Firebase Authentication (con persistencia en AsyncStorage)
+  auth = createAuth();
+  
+  // 🗄️ Initialize Firestore
+  db = getFirestore(app);
+} else {
+  console.warn(
+    "[firebaseConfig] ⚠️  Firebase not configured. Cloud features will not work.\n" +
+    `Missing vars: ${missingFirebaseEnvVars.join(", ")}\n` +
+    "See FIREBASE_SETUP.md for instructions.",
   );
 }
 
-// 🔥 Firebase configuration (customizable via .env)
-const firebaseConfig = {
-  apiKey: readEnv("EXPO_PUBLIC_FIREBASE_API_KEY"),
-  authDomain: readEnv("EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN"),
-  projectId: readEnv("EXPO_PUBLIC_FIREBASE_PROJECT_ID"),
-  storageBucket: readEnv("EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET"),
-  messagingSenderId: readEnv("EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID"),
-  appId: readEnv("EXPO_PUBLIC_FIREBASE_APP_ID"),
-  measurementId: readEnv("EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID", false),
-};
+// Backwards-compatible exports
+export { db, auth, app };
 
-// 🚀 Initialize Firebase
-export const app =
-  getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-
-function createAuth() {
-  try {
-    return initializeAuth(app, {
-      persistence: getReactNativePersistence(AsyncStorage),
-    });
-  } catch {
-    return getAuth(app);
-  }
-}
-
-// 🔐 Initialize Firebase Authentication (con persistencia en AsyncStorage)
-export const auth = createAuth();
+// Also export getter functions for safety checks
+export const getFirebaseApp = () => app;
+export const getFirebaseAuth = () => auth;
+export const getFirebaseDb = () => db;
 
 // 🗄️ Initialize Firestore Database
 export const db = getFirestore(app);

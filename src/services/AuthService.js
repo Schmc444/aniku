@@ -1,8 +1,7 @@
-const logger = createLogger("auth");
-import { createLogger } from "../utils/logger";
 // src/services/AuthService.js
 // Servicio de autenticación con Firebase
 
+import { createLogger } from "../utils/logger";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -11,19 +10,27 @@ import {
   sendPasswordResetEmail,
   updateProfile,
 } from "firebase/auth";
-import { auth } from "../../firebaseConfig";
+import { getFirebaseAuth, isFirebaseConfigured } from "../../firebaseConfig";
+
+const logger = createLogger("auth");
 
 class AuthService {
   // 👤 Obtener usuario actual
   static getCurrentUser() {
-    return auth.currentUser;
+    try {
+      const auth = getFirebaseAuth();
+      return auth?.currentUser || null;
+    } catch (e) {
+      logger.debug("⚠️ Firebase not configured, getCurrentUser returning null");
+      return null;
+    }
   }
 
   // 🔐 Iniciar sesión con email y contraseña
   static async signInWithEmail(email, password) {
     try {
       const userCredential = await signInWithEmailAndPassword(
-        auth,
+        getFirebaseAuth(),
         email,
         password
       );
@@ -47,7 +54,7 @@ class AuthService {
   static async signUpWithEmail(email, password, displayName = null) {
     try {
       const userCredential = await createUserWithEmailAndPassword(
-        auth,
+        getFirebaseAuth(),
         email,
         password
       );
@@ -78,7 +85,7 @@ class AuthService {
   // 🚪 Cerrar sesión
   static async signOut() {
     try {
-      await signOut(auth);
+      await signOut(getFirebaseAuth());
       logger.debug("✅ Sesión cerrada");
       return {
         success: true,
@@ -96,7 +103,7 @@ class AuthService {
   // 🔄 Restablecer contraseña
   static async resetPassword(email) {
     try {
-      await sendPasswordResetEmail(auth, email);
+      await sendPasswordResetEmail(getFirebaseAuth(), email);
       logger.debug("✅ Email de restablecimiento enviado a:", email);
       return {
         success: true,
@@ -113,22 +120,22 @@ class AuthService {
 
   // 👁️ Observar cambios en el estado de autenticación
   static onAuthStateChange(callback) {
-    return onAuthStateChanged(auth, callback);
+    return onAuthStateChanged(getFirebaseAuth(), callback);
   }
 
   // 🔍 Verificar si el usuario está autenticado
   static isAuthenticated() {
-    return auth.currentUser !== null;
+    return getFirebaseAuth()?.currentUser !== null;
   }
 
   // 📧 Obtener email del usuario actual
   static getCurrentUserEmail() {
-    return auth.currentUser?.email || null;
+    return getFirebaseAuth()?.currentUser?.email || null;
   }
 
   // 👤 Obtener información del usuario actual
   static getCurrentUserInfo() {
-    const user = auth.currentUser;
+    const user = getFirebaseAuth()?.currentUser;
     if (!user) return null;
 
     return {
@@ -161,7 +168,7 @@ class AuthService {
 
   // 🧪 Método de debug
   static debugAuth() {
-    const user = auth.currentUser;
+    const user = getFirebaseAuth()?.currentUser;
     logger.debug("🔍 DEBUG AUTH:");
     logger.debug("   Usuario actual:", user ? user.email : "No autenticado");
     logger.debug("   UID:", user?.uid || "N/A");

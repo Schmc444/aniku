@@ -18,7 +18,7 @@ import {
   enableNetwork,
   disableNetwork,
 } from "firebase/firestore";
-import { db } from "../../firebaseConfig";
+import { getFirebaseDb } from "../../firebaseConfig";
 import AuthService from "./AuthService";
 
 class CloudHistoryService {
@@ -26,8 +26,8 @@ class CloudHistoryService {
   static MAX_HISTORY_ITEMS = 100;
 
   // �️ Eliminar entrada del historial en Firestore
-  static async deleteWatchingEntry(animeId) {
-    const user = AuthService.getCurrentUser();
+  static async deleteWatchingEntry(animeId) {    const database = getFirebaseDb();
+    if (!database) { console.warn("⚠️ Firebase not configured. Cloud history disabled."); return; }    const user = AuthService.getCurrentUser();
     if (!user) return { success: false, reason: "not_authenticated" };
 
     const docId = `${user.uid}_${animeId}`;
