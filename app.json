@@ -31,7 +31,14 @@
     },
     "plugins": [
       "react-native-video",
-      "expo-screen-orientation"
+      "expo-screen-orientation",
+      [
+        "react-native-google-cast",
+        {
+          "receiverAppId": "CC1AD845"
+        }
+      ],
+      "./plugins/withCastDowngrade"
     ]
   }
 }
