@@ -11,19 +11,27 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getFirestore } from "firebase/firestore";
 import { getAnalytics, isSupported } from "firebase/analytics";
 
-const REQUIRED_FIREBASE_ENV_VARS = [
-  "EXPO_PUBLIC_FIREBASE_API_KEY",
-  "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN",
-  "EXPO_PUBLIC_FIREBASE_PROJECT_ID",
-  "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET",
-  "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID",
-  "EXPO_PUBLIC_FIREBASE_APP_ID",
+const firebaseEnv = {
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY?.trim() || "",
+  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN?.trim() || "",
+  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID?.trim() || "",
+  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET?.trim() || "",
+  messagingSenderId:
+    process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID?.trim() || "",
+  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID?.trim() || "",
+  measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID?.trim() || "",
+};
+
+const firebaseEnvPairs = [
+  ["EXPO_PUBLIC_FIREBASE_API_KEY", firebaseEnv.apiKey],
+  ["EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN", firebaseEnv.authDomain],
+  ["EXPO_PUBLIC_FIREBASE_PROJECT_ID", firebaseEnv.projectId],
+  ["EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET", firebaseEnv.storageBucket],
+  ["EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID", firebaseEnv.messagingSenderId],
+  ["EXPO_PUBLIC_FIREBASE_APP_ID", firebaseEnv.appId],
 ];
 
-function readEnv(name, required = true) {
-  const rawValue = process.env[name];
-  const value = typeof rawValue === "string" ? rawValue.trim() : "";
-
+function readEnv(value, name, required = true) {
   if (!required) {
     return value || undefined;
   }
@@ -37,10 +45,9 @@ function readEnv(name, required = true) {
   return value;
 }
 
-const missingFirebaseEnvVars = REQUIRED_FIREBASE_ENV_VARS.filter(
-  (envName) =>
-    !process.env[envName] || process.env[envName].trim().length === 0,
-);
+const missingFirebaseEnvVars = firebaseEnvPairs
+  .filter(([, value]) => value.length === 0)
+  .map(([name]) => name);
 
 // Flag to track if Firebase is properly configured
 export const isFirebaseConfigured = missingFirebaseEnvVars.length === 0;
@@ -53,13 +60,16 @@ let db = null;
 
 if (isFirebaseConfigured) {
   firebaseConfig = {
-    apiKey: readEnv("EXPO_PUBLIC_FIREBASE_API_KEY"),
-    authDomain: readEnv("EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN"),
-    projectId: readEnv("EXPO_PUBLIC_FIREBASE_PROJECT_ID"),
-    storageBucket: readEnv("EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET"),
-    messagingSenderId: readEnv("EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID"),
-    appId: readEnv("EXPO_PUBLIC_FIREBASE_APP_ID"),
-    measurementId: readEnv("EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID", false),
+    apiKey: readEnv(firebaseEnv.apiKey, "EXPO_PUBLIC_FIREBASE_API_KEY"),
+    authDomain: readEnv(firebaseEnv.authDomain, "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN"),
+    projectId: readEnv(firebaseEnv.projectId, "EXPO_PUBLIC_FIREBASE_PROJECT_ID"),
+    storageBucket: readEnv(firebaseEnv.storageBucket, "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET"),
+    messagingSenderId: readEnv(
+      firebaseEnv.messagingSenderId,
+      "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID",
+    ),
+    appId: readEnv(firebaseEnv.appId, "EXPO_PUBLIC_FIREBASE_APP_ID"),
+    measurementId: readEnv(firebaseEnv.measurementId, "EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID", false),
   };
 
   // 🚀 Initialize Firebase
