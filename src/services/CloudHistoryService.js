@@ -26,12 +26,17 @@ class CloudHistoryService {
   static MAX_HISTORY_ITEMS = 100;
 
   // �️ Eliminar entrada del historial en Firestore
-  static async deleteWatchingEntry(animeId) {    const database = getFirebaseDb();
-    if (!database) { console.warn("⚠️ Firebase not configured. Cloud history disabled."); return; }    const user = AuthService.getCurrentUser();
+  static async deleteWatchingEntry(animeId) {
+    const database = getFirebaseDb();
+    if (!database) {
+      console.warn("⚠️ Firebase not configured. Cloud history disabled.");
+      return;
+    }
+    const user = AuthService.getCurrentUser();
     if (!user) return { success: false, reason: "not_authenticated" };
 
     const docId = `${user.uid}_${animeId}`;
-    await deleteDoc(doc(db, this.COLLECTION_NAME, docId));
+    await deleteDoc(doc(database, this.COLLECTION_NAME, docId));
     logger.debug("☁️ Removido de cloud:", docId);
     return { success: true };
   }
@@ -39,6 +44,12 @@ class CloudHistoryService {
   // �📤 Subir entrada de historial a Firestore
   static async uploadWatchingEntry(watchingEntry) {
     try {
+      const database = getFirebaseDb();
+      if (!database) {
+        logger.debug("⚠️ Firebase no configurado, skipping cloud sync");
+        return { success: false, reason: "firebase_not_configured" };
+      }
+
       const user = AuthService.getCurrentUser();
       if (!user) {
         logger.debug("⚠️ No hay usuario autenticado, skipping cloud sync");
@@ -63,7 +74,7 @@ class CloudHistoryService {
         },
       };
 
-      await setDoc(doc(db, this.COLLECTION_NAME, docId), cloudEntry, {
+      await setDoc(doc(database, this.COLLECTION_NAME, docId), cloudEntry, {
         merge: true,
       });
 
@@ -78,6 +89,12 @@ class CloudHistoryService {
   // 📥 Descargar historial completo del usuario desde Firestore
   static async downloadUserHistory() {
     try {
+      const database = getFirebaseDb();
+      if (!database) {
+        logger.debug("⚠️ Firebase no configurado para descargar historial");
+        return { success: false, data: [], reason: "firebase_not_configured" };
+      }
+
       const user = AuthService.getCurrentUser();
       if (!user) {
         logger.debug("⚠️ No hay usuario autenticado para descargar historial");
@@ -85,7 +102,7 @@ class CloudHistoryService {
       }
 
       const q = query(
-        collection(db, this.COLLECTION_NAME),
+        collection(database, this.COLLECTION_NAME),
         where("userId", "==", user.uid),
         orderBy("lastWatched", "desc"),
         limit(this.MAX_HISTORY_ITEMS),
@@ -233,8 +250,14 @@ class CloudHistoryService {
   // 👁️ Escuchar cambios en tiempo real (opcional)
   static subscribeToHistoryChanges(userId, callback) {
     try {
+      const database = getFirebaseDb();
+      if (!database) {
+        logger.debug("⚠️ Firebase no configurado para listener de historial");
+        return null;
+      }
+
       const q = query(
-        collection(db, this.COLLECTION_NAME),
+        collection(database, this.COLLECTION_NAME),
         where("userId", "==", userId),
         orderBy("lastWatched", "desc"),
         limit(20), // Solo los más recientes para tiempo real
@@ -273,11 +296,17 @@ class CloudHistoryService {
   // 🌐 Verificar conectividad y habilitar/deshabilitar red
   static async setOfflineMode(offline = false) {
     try {
+      const database = getFirebaseDb();
+      if (!database) {
+        logger.debug("⚠️ Firebase no configurado para setOfflineMode");
+        return false;
+      }
+
       if (offline) {
-        await disableNetwork(db);
+        await disableNetwork(database);
         logger.debug("📴 Firestore: Modo offline activado");
       } else {
-        await enableNetwork(db);
+        await enableNetwork(database);
         logger.debug("📶 Firestore: Modo online activado");
       }
       return true;
@@ -290,11 +319,14 @@ class CloudHistoryService {
   // 🧪 Debug: Obtener estadísticas de sync
   static async getCloudStats() {
     try {
+      const database = getFirebaseDb();
+      if (!database) return null;
+
       const user = AuthService.getCurrentUser();
       if (!user) return null;
 
       const q = query(
-        collection(db, this.COLLECTION_NAME),
+        collection(database, this.COLLECTION_NAME),
         where("userId", "==", user.uid),
       );
 

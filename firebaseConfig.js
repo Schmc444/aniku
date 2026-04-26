@@ -77,14 +77,14 @@ if (isFirebaseConfigured) {
 
   // 🔐 Initialize Firebase Authentication (con persistencia en AsyncStorage)
   auth = createAuth();
-  
+
   // 🗄️ Initialize Firestore
   db = getFirestore(app);
 } else {
   console.warn(
     "[firebaseConfig] ⚠️  Firebase not configured. Cloud features will not work.\n" +
-    `Missing vars: ${missingFirebaseEnvVars.join(", ")}\n` +
-    "See FIREBASE_SETUP.md for instructions.",
+      `Missing vars: ${missingFirebaseEnvVars.join(", ")}\n` +
+      "See FIREBASE_SETUP.md for instructions.",
   );
 }
 
@@ -96,12 +96,9 @@ export const getFirebaseApp = () => app;
 export const getFirebaseAuth = () => auth;
 export const getFirebaseDb = () => db;
 
-// 🗄️ Initialize Firestore Database
-export const db = getFirestore(app);
-
 // 📊 Initialize Analytics (only on web platform)
 let analytics = null;
-if (typeof window !== "undefined") {
+if (typeof window !== "undefined" && app) {
   isSupported().then((supported) => {
     if (supported) {
       analytics = getAnalytics(app);
@@ -115,5 +112,7 @@ export { analytics };
 // import { enableNetwork, disableNetwork } from 'firebase/firestore';
 // export { enableNetwork, disableNetwork };
 
-console.log("🔥 Firebase inicializado correctamente:", app.name);
-console.log("🎯 Proyecto ID:", firebaseConfig.projectId);
+if (app && firebaseConfig) {
+  console.log("🔥 Firebase inicializado correctamente:", app.name);
+  console.log("🎯 Proyecto ID:", firebaseConfig.projectId);
+}

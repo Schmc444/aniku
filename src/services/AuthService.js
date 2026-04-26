@@ -32,7 +32,7 @@ class AuthService {
       const userCredential = await signInWithEmailAndPassword(
         getFirebaseAuth(),
         email,
-        password
+        password,
       );
       logger.debug("✅ Usuario autenticado:", userCredential.user.email);
       return {
@@ -56,7 +56,7 @@ class AuthService {
       const userCredential = await createUserWithEmailAndPassword(
         getFirebaseAuth(),
         email,
-        password
+        password,
       );
 
       // Actualizar nombre de usuario si se proporciona

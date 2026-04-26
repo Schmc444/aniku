@@ -49,6 +49,7 @@ class CloudListsService {
         doc(database, this.LISTS_COLLECTION, user.uid),
         { userId: user.uid, lists, updatedAt: serverTimestamp() },
         { merge: false },
+      );
     } catch (e) {
       logger.warn("☁️ [Lists] Error subiendo listas:", e.message);
     }
@@ -68,6 +69,7 @@ class CloudListsService {
         doc(database, this.ITEMS_COLLECTION, docId),
         { userId: user.uid, listId, items, updatedAt: serverTimestamp() },
         { merge: false },
+      );
     } catch (e) {
       logger.warn("☁️ [Lists] Error subiendo items:", e.message);
     }
