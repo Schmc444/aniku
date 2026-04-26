@@ -2,6 +2,7 @@ import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { View, Platform } from "react-native";
 import { MaterialIcons, Ionicons } from "@expo/vector-icons";
+import CastMiniController from "../components/CastMiniController";
 
 // Importar las pantallas principales
 import {
@@ -47,6 +48,7 @@ const TabIcon = ({ name, color, size = 24 }) => {
 
 const TabNavigator = () => {
   return (
+    <View style={{ flex: 1 }}>
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ color, size }) => (
@@ -116,6 +118,8 @@ const TabNavigator = () => {
         }}
       />
     </Tab.Navigator>
+    <CastMiniController />
+    </View>
   );
 };
 

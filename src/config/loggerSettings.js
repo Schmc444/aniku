@@ -8,6 +8,7 @@ export const DEFAULT_LOG_TAGS = {
   api: true,
   catalog: false,
   player: false,
+  cast: true,
   downloads: false,
   history: false,
   ui: false,
