@@ -1,13 +1,22 @@
-const logger = createLogger("downloads");
 import { createLogger } from "../utils/logger";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import RNFS from "react-native-fs";
-import {
-  createDownloadTask,
-  getExistingDownloadTasks,
-} from "@kesha-antonov/react-native-background-downloader";
 import { CustomAlert } from "../components/CustomAlert.js";
 import AnimeService from "./AnimeService.js";
+
+const logger = createLogger("downloads");
+
+let RNFS, createDownloadTask, getExistingDownloadTasks;
+
+try {
+  RNFS = require("react-native-fs");
+  const bgDownloader = require("@kesha-antonov/react-native-background-downloader");
+  createDownloadTask = bgDownloader.createDownloadTask;
+  getExistingDownloadTasks = bgDownloader.getExistingDownloadTasks;
+} catch {
+  RNFS = { DocumentDirectoryPath: "", exists: () => false, mkdir: () => {}, unlink: () => {} };
+  createDownloadTask = () => {};
+  getExistingDownloadTasks = () => Promise.resolve([]);
+}
 
 class DownloadService {
   static DOWNLOADS_KEY = "downloaded_episodes";

@@ -1,16 +1,26 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import {
-  useCastState,
-  useRemoteMediaClient,
-  useMediaStatus,
-  MediaPlayerState,
-} from "react-native-google-cast";
+
+let useCastState = () => null;
+let useRemoteMediaClient = () => null;
+let useMediaStatus = () => null;
+let MediaPlayerState = {};
+
+try {
+  const googleCast = require("react-native-google-cast");
+  useCastState = googleCast.useCastState;
+  useRemoteMediaClient = googleCast.useRemoteMediaClient;
+  useMediaStatus = googleCast.useMediaStatus;
+  MediaPlayerState = googleCast.MediaPlayerState;
+} catch {}
 
 const TAB_BAR_HEIGHT = Platform.OS === "ios" ? 85 : 65;
 
 const CastMiniController = () => {
+  // Don't render on web
+  if (Platform.OS === "web") return null;
+
   const castState = useCastState();
   const client = useRemoteMediaClient();
   const mediaStatus = useMediaStatus();

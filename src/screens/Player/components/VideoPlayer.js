@@ -16,9 +16,32 @@ import {
 import Video from "react-native-video";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { CastButton, useRemoteMediaClient, useCastState, useStreamPosition } from "react-native-google-cast";
-import { startProxyServer, stopProxyServer, registerProxyUrl, unregisterProxyUrl } from "../../../../modules/video-proxy/src";
 import { playerStyles as styles } from "../styles/PlayerStyles";
+
+let startProxyServer = () => Promise.resolve();
+let stopProxyServer = () => Promise.resolve();
+let registerProxyUrl = () => null;
+let unregisterProxyUrl = () => {};
+let CastButton = () => null;
+let useRemoteMediaClient = () => null;
+let useCastState = () => null;
+let useStreamPosition = () => null;
+
+try {
+  const videoProxy = require("../../../../modules/video-proxy/src");
+  startProxyServer = videoProxy.startProxyServer;
+  stopProxyServer = videoProxy.stopProxyServer;
+  registerProxyUrl = videoProxy.registerProxyUrl;
+  unregisterProxyUrl = videoProxy.unregisterProxyUrl;
+} catch {}
+
+try {
+  const googleCast = require("react-native-google-cast");
+  CastButton = googleCast.CastButton;
+  useRemoteMediaClient = googleCast.useRemoteMediaClient;
+  useCastState = googleCast.useCastState;
+  useStreamPosition = googleCast.useStreamPosition;
+} catch {}
 
 const formatTime = (secs) => {
   const s = Math.floor(secs || 0);
