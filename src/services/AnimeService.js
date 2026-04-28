@@ -538,32 +538,22 @@ class AnimeService {
     }
 
     try {
-      const episodeGQL = `query ($showId: String!, $translationType: VaildTranslationTypeEnumType!, $episodeString: String!) { episode( showId: $showId translationType: $translationType episodeString: $episodeString ) { episodeString sourceUrls }}`;
+      const variables = { showId, translationType, episodeString };
 
-      const variables = {
-        showId,
-        translationType,
-        episodeString,
-      };
-
-      const response = await axios.post(
-        `${API_CONFIG.BASE_URL}/api`,
-        {
-          variables,
-          query: episodeGQL,
+      const response = await axios.get(`${API_CONFIG.BASE_URL}/api`, {
+        params: {
+          variables: JSON.stringify(variables),
+          extensions: JSON.stringify({
+            persistedQuery: {
+              version: 1,
+              sha256Hash: "d405d0edd690624b66baba3068e0edc3ac90f1597d898a1ec8db4e5c43c00fec",
+            },
+          }),
         },
-        {
-          headers: API_CONFIG.getHeaders(),
-        },
-      );
+        headers: API_CONFIG.getGetHeaders(),
+      });
 
       logger.debug("📥 getEpisodeUrl response status:", response.status);
-
-      const errors = response.data?.errors;
-      if (errors?.some((e) => e.message === "NEED_CAPTCHA")) {
-        logger.warn("⚠️ AllAnime requiere captcha — posible rate limit o IP bloqueada");
-        throw new Error("La API requiere verificación. Intentá de nuevo en unos segundos.");
-      }
 
       const result = await this.parseEpisodeProviders(response.data);
 
