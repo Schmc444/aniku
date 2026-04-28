@@ -1,14 +1,11 @@
-const logger = createLogger("history");
 import { createLogger } from "../utils/logger";
-// src/services/HybridHistoryService.js
-// Servicio híbrido que maneja historial local (AsyncStorage) + cloud (Firestore)
-// Mantiene compatibilidad offline y sincronización automática
-
 import HistoryService from "./HistoryService";
 import CloudHistoryService from "./CloudHistoryService";
 import AuthService from "./AuthService";
 import NetInfo from "@react-native-community/netinfo";
 import ListsService from "./ListsService";
+
+const logger = createLogger("history");
 
 class HybridHistoryService {
   static isOnline = true;
